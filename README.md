@@ -15,15 +15,19 @@ Maniq is a comprehensive stress testing tool for Manim that helps you determine 
   - 2K quality (1440p) - `p`/`2k`
   - 4K quality (2160p) - `k`/`4k`
 
+- **Dual rendering modes**:
+  - **CPU rendering** (default): Traditional Manim rendering
+  - **GPU rendering** (OpenGL): Accelerated rendering with GPU support
+
 - **Intelligent resource management**: 
-  - Dynamically adjusts concurrency based on historical CPU usage
+  - Dynamically adjusts concurrency based on historical CPU/GPU usage
   - Prevents server crashes by monitoring system resources
-  - Automatically pauses when CPU or memory usage exceeds 90%
+  - Automatically pauses when CPU, GPU, or memory usage exceeds 90%
 
 - **Comprehensive analysis**:
   - Render time statistics (average, min, max, median, standard deviation)
   - Video duration and file size analysis
-  - System resource usage monitoring (CPU, memory)
+  - System resource usage monitoring (CPU, memory, GPU)
 
 - **Multi-language support**: 
   - English (`en`)
@@ -70,11 +74,24 @@ pip install .
 
 ## 🚀 Quick Start
 
+### CPU vs GPU Rendering
+
+By default, Maniq uses CPU rendering. To enable GPU rendering with OpenGL:
+
+```bash
+# CPU rendering (default)
+maniq /home/manim-code
+
+# GPU rendering (OpenGL)
+maniq /home/manim-code --gpu
+maniq /home/manim-code -g  # Short form
+```
+
 ### Basic usage
 
 ```bash
 # Test all quality levels with default settings
-maniq /path/to/your/manim/code
+maniq /home/manim-code
 
 # View version information
 maniq -V
@@ -85,16 +102,22 @@ maniq --version
 
 ```bash
 # Test only high quality and 4K with 2-second intervals
-maniq /path/to/manim/code -q h k -i 2.0
+maniq /home/manim-code -q h k -i 2.0
 
 # Test low and medium quality in Chinese
-maniq /path/to/manim/code -q l m --lang zh
+maniq /home/manim-code -q l m --lang zh
+
+# GPU rendering with high and 4K quality
+maniq /home/manim-code -q h k --gpu
+
+# GPU rendering with GPU usage monitoring
+maniq /home/manim-code -q m h --gpu --gpu-monitor
 
 # Custom output directories and test duration
-maniq /path/to/manim/code -o my_output -d 1200 --lang ja
+maniq /home/manim-code -o my_output -d 1200 --lang ja
 
 # Mix short and full quality names
-maniq /path/to/manim/code -q low m 2k k --lang ko
+maniq /home/manim-code -q low m 2k k --lang ko
 ```
 
 ## 📋 Command Line Options
@@ -111,6 +134,13 @@ maniq /path/to/manim/code -q low m 2k k --lang ko
 | Option | Short | Description | Values |
 |--------|-------|-------------|--------|
 | `--qualities` | `-q` | Quality levels to test | `l`/`low`, `m`/`medium`, `h`/`high`, `p`/`2k`, `k`/`4k` |
+
+### GPU Options
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--gpu` | `-g` | Enable GPU rendering (OpenGL renderer) | `False` |
+| `--gpu-monitor` | | Enable GPU usage monitoring | `False` |
 
 ### Configuration
 
@@ -154,6 +184,7 @@ After running Maniq, you'll get the following output files:
 - **Task Logs** (`manim_task_logs/`): Individual logs for each render task containing:
   - Full command output (stdout/stderr)
   - System resource usage before and after
+  - GPU usage (if GPU monitoring enabled)
   - Video file information (if available)
   - Execution timing details
 
@@ -182,6 +213,7 @@ Performance Comparison Summary
 
 Maniq uses a sophisticated algorithm to prevent system overload:
 
+### CPU Mode
 1. **Initial Phase**: Starts tasks with the specified interval
 2. **Monitoring**: Tracks CPU and memory usage of completed tasks
 3. **Dynamic Adjustment**: Calculates average CPU usage per task
@@ -191,20 +223,38 @@ Maniq uses a sophisticated algorithm to prevent system overload:
    - Memory usage < 90%
 5. **Automatic Pause**: Waits for resources to become available if limits are exceeded
 
+### GPU Mode
+1. **Enhanced Monitoring**: Tracks CPU, GPU, and memory usage
+2. **Dual Resource Management**: Applies safety checks to both CPU and GPU
+3. **GPU-Specific Commands**: Uses OpenGL renderer with required flags:
+   - `--renderer=opengl`
+   - `--write_to_movie`
+   - `--disable_caching`
+   - `--flush_cache`
+4. **Extended Timeouts**: GPU rendering may take longer, so timeouts are increased
+
 This ensures your server remains responsive and doesn't crash during intensive testing.
 
 ## 🔧 Requirements
 
 ### Python Dependencies
 - `psutil>=7.0.0` - System resource monitoring
+- `pynvml>=11.0.0` - GPU monitoring (automatically installed on non-macOS systems)
 
 ### System Dependencies
 - **Manim** - The animation engine being tested
 - **ffprobe** (optional) - For detailed video analysis (part of ffmpeg)
+- **NVIDIA GPU** (for GPU rendering) - With CUDA drivers installed
+
+### GPU Rendering Requirements
+- **NVIDIA GPU** with CUDA support
+- **Manim with OpenGL support** - Ensure your Manim installation supports `--renderer=opengl`
+- **Linux or Windows** - macOS is not supported for GPU monitoring
+- **CUDA drivers** - Properly installed and configured
 
 ### Hardware Recommendations
-- **Minimum**: 4 CPU cores, 8GB RAM
-- **Recommended**: 8+ CPU cores, 16+ GB RAM for 4K testing
+- **CPU Testing**: 4+ CPU cores, 8GB+ RAM
+- **GPU Testing**: NVIDIA GPU with 4GB+ VRAM, 8+ CPU cores, 16GB+ RAM
 - **Storage**: Sufficient disk space for rendered videos (4K videos can be large)
 
 ## 🐛 Troubleshooting
@@ -215,14 +265,21 @@ This ensures your server remains responsive and doesn't crash during intensive t
 - Ensure your code directory contains Manim `.py` files
 - Verify the path is correct and accessible
 
+**GPU rendering not working**
+- Ensure your Manim installation supports OpenGL rendering
+- Check that you have a compatible NVIDIA GPU
+- Verify CUDA drivers are properly installed
+
 **Tasks failing with timeout**
 - Increase `--max-duration` for higher quality levels
-- 4K rendering may take longer than the default 20-minute timeout
+- GPU rendering may take longer than CPU rendering
+- 4K GPU rendering may exceed the default 30-minute timeout
 
 **Poor performance or crashes**
 - Reduce `--launch-interval` to start tasks less frequently
 - Test fewer quality levels simultaneously
 - Ensure sufficient system resources are available
+- For GPU testing, ensure adequate VRAM is available
 
 **CJK characters not displaying properly**
 - Ensure your terminal supports UTF-8 encoding
@@ -233,6 +290,7 @@ This ensures your server remains responsive and doesn't crash during intensive t
 - Check the main log file for detailed error messages
 - Review individual task logs in `manim_task_logs/` directory
 - Monitor system resources during testing using `htop` or similar tools
+- For GPU issues, check `nvidia-smi` output during testing
 
 ## 📄 License
 
@@ -242,6 +300,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Built on top of the amazing [Manim](https://www.manim.community/) animation engine
 - Uses [psutil](https://github.com/giampaolo/psutil) for system monitoring
+- Uses [pynvml](https://pypi.org/project/pynvml/) for GPU monitoring
 - Inspired by the need for reliable performance testing in production environments
 
 ## 📬 Feedback and Contributions

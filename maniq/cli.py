@@ -64,6 +64,11 @@ def main():
                             "Short forms: l=low, m=medium, h=high, p=2k, k=4k")
     parser.add_argument("--lang", "--language", choices=['en', 'zh', 'zh_tw', 'ko', 'ja', 'de', 'fr', 'es', 'ru'],
                        default='en', help="Report and log language (default: en)")
+    # GPU rendering options
+    parser.add_argument("--gpu", "-g", action="store_true", 
+                       help="Enable GPU rendering (OpenGL renderer)")
+    parser.add_argument("--gpu-monitor", action="store_true",
+                       help="Enable GPU usage monitoring (requires nvidia-ml-py)")
     
     args = parser.parse_args()
     
@@ -84,11 +89,15 @@ def main():
             output_dir=args.output_dir,
             log_output_dir=args.log_output_dir,
             launch_interval=args.launch_interval,
-            language=args.lang
+            language=args.lang,
+            use_gpu=args.gpu,
+            monitor_gpu=args.gpu_monitor
         )
         
         logger.info("=" * 90)
         logger.info("Starting Maniq - Manim Quality Stress Testing")
+        render_type = "GPU (OpenGL)" if args.gpu else "CPU"
+        logger.info(f"Render type: {render_type}")
         logger.info(f"Supported quality levels: low(480p), medium(720p), high(1080p), 2k(1440p), 4k(2160p)")
         logger.info(f"Testing quality levels: {args.qualities}")
         logger.info(f"Task launch interval: {args.launch_interval} seconds")

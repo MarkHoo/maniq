@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Data models for Maniq
+Data models for Maniq with GPU support
 """
 
 from dataclasses import dataclass
@@ -40,6 +40,10 @@ class RenderResult:
     command: List[str]
     video_info: Optional[VideoInfo] = None
     estimated_cpu_usage: float = 0.0
+    # GPU fields (optional)
+    estimated_gpu_usage: float = 0.0
+    gpu_usage_start: float = 0.0
+    gpu_usage_end: float = 0.0
 
 @dataclass
 class QualityTestResult:
@@ -70,3 +74,7 @@ class QualityTestResult:
     tasks_per_second: float
     individual_results: List[RenderResult]
     cpu_usage_history: List[float]
+    # GPU fields
+    gpu_usage_history: List[float] = None
+    use_gpu: bool = False
+    

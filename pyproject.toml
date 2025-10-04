@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maniq"
-version = "3.3.1"
+version = "4.0.0rc1"
 description = "Manim Quality Stress Testing Tool"
 readme = "README.md"
 license = "Apache-2.0"
@@ -22,9 +22,10 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
-keywords = ["manim", "rendering", "stress-test", "performance", "quality"]
+keywords = ["manim", "rendering", "stress-test", "performance", "quality", "gpu"]
 dependencies = [
     "psutil>=7.0.0",
+    "pynvml>=11.0.0; sys_platform != 'darwin'",
 ]
 requires-python = ">=3.10"
 
