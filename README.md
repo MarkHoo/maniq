@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/maniq)](https://pypi.org/project/maniq/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/maniq)](https://pypi.org/project/maniq/)
-[![License](https://img.shields.io/pypi/l/maniq)](https://github.com/yourusername/maniq/blob/main/LICENSE)
+[![License](https://img.shields.io/pypi/l/maniq)](https://github.com/MarkHoo/maniq/blob/main/LICENSE)
 
 Maniq is a comprehensive stress testing tool for Manim that helps you determine the maximum concurrent rendering capacity of your server across different quality levels with intelligent resource management to prevent system crashes.
 
@@ -246,7 +246,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📬 Feedback and Contributions
 
-We welcome feedback, bug reports, and contributions! Please open an issue or pull request on our [GitHub repository](https://github.com/yourusername/maniq).
+We welcome feedback, bug reports, and contributions! Please open an issue or pull request on our [GitHub repository](https://github.com/MarkHoo/maniq).
 
 ---
 
