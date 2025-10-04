@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Main testing logic for Maniq with GPU support
+Main testing logic for Maniq with GPU support and comprehensive GPU statistics
 """
 
 import os
@@ -40,13 +40,19 @@ class ManimQualityStressTester:
         
         # Initialize GPU monitoring if requested
         self.gpu_monitor = None
+        self.gpu_info = ""
         if self.monitor_gpu:
             try:
                 from ..utils.gpu_monitor import GPUMonitor
                 self.gpu_monitor = GPUMonitor()
-                self.logger.info("GPU monitoring enabled")
+                if self.gpu_monitor.nvml_available:
+                    self.gpu_info = self.gpu_monitor.get_gpu_info()
+                    self.logger.info(f"GPU monitoring enabled: {self.gpu_info}")
+                else:
+                    self.logger.warning("GPU monitoring requested but not available. GPU monitoring disabled.")
+                    self.monitor_gpu = False
             except ImportError:
-                self.logger.warning("GPU monitoring requested but nvidia-ml-py not installed. GPU monitoring disabled.")
+                self.logger.warning("GPU monitoring requested but pynvml not installed. GPU monitoring disabled.")
                 self.monitor_gpu = False
         
         self.output_dir.mkdir(exist_ok=True)
@@ -128,8 +134,9 @@ class ManimQualityStressTester:
         # Get system resources (and GPU if monitoring)
         start_resources = self.resource_monitor.get_system_resources()
         start_gpu_usage = 0.0
+        start_gpu_memory_usage = 0.0
         if self.gpu_monitor and self.monitor_gpu:
-            start_gpu_usage = self.gpu_monitor.get_gpu_usage()
+            start_gpu_usage, start_gpu_memory_usage = self.gpu_monitor.get_gpu_usage()
         
         # Build command
         cmd = self._build_manim_command(file_path, quality, output_path)
@@ -151,6 +158,7 @@ class ManimQualityStressTester:
                            f"Available memory={start_resources['memory_available_gb']:.2f}GB\n")
                 if self.monitor_gpu:
                     log_f.write(f"Initial GPU usage: {start_gpu_usage:.1f}%\n")
+                    log_f.write(f"Initial GPU memory usage: {start_gpu_memory_usage:.1f}%\n")
                 log_f.write("-" * 80 + "\n")
                 log_f.write("Standard output and error output:\n")
                 log_f.write("-" * 80 + "\n")
@@ -206,8 +214,9 @@ class ManimQualityStressTester:
             end_time = time.time()
             end_resources = self.resource_monitor.get_system_resources()
             end_gpu_usage = 0.0
+            end_gpu_memory_usage = 0.0
             if self.gpu_monitor and self.monitor_gpu:
-                end_gpu_usage = self.gpu_monitor.get_gpu_usage()
+                end_gpu_usage, end_gpu_memory_usage = self.gpu_monitor.get_gpu_usage()
             
             stdout_content = ''.join(stdout_lines)
             stderr_content = ''.join(stderr_lines)
@@ -227,6 +236,7 @@ class ManimQualityStressTester:
             # Estimate resource usage
             estimated_cpu_usage = (start_resources['cpu_percent'] + end_resources['cpu_percent']) / 2
             estimated_gpu_usage = (start_gpu_usage + end_gpu_usage) / 2 if self.monitor_gpu else 0.0
+            estimated_gpu_memory_usage = (start_gpu_memory_usage + end_gpu_memory_usage) / 2 if self.monitor_gpu else 0.0
             
             with open(task_log_file, 'a', encoding='utf-8') as log_f:
                 log_f.write("-" * 80 + "\n")
@@ -238,6 +248,7 @@ class ManimQualityStressTester:
                 log_f.write(f"Estimated CPU usage: {estimated_cpu_usage:.1f}%\n")
                 if self.monitor_gpu:
                     log_f.write(f"Estimated GPU usage: {estimated_gpu_usage:.1f}%\n")
+                    log_f.write(f"Estimated GPU memory usage: {estimated_gpu_memory_usage:.1f}%\n")
                 if video_info:
                     log_f.write(f"File size: {video_info.file_size_mb:.2f} MB\n")
                     log_f.write(f"Video duration: {video_info.duration_seconds:.2f} seconds\n")
@@ -247,12 +258,14 @@ class ManimQualityStressTester:
                            f"Available memory={end_resources['memory_available_gb']:.2f}GB\n")
                 if self.monitor_gpu:
                     log_f.write(f"Final GPU usage: {end_gpu_usage:.1f}%\n")
+                    log_f.write(f"Final GPU memory usage: {end_gpu_memory_usage:.1f}%\n")
             
             if success:
                 self.logger.info(f"[{quality.upper()} #{task_id}] Task completed successfully "
                                f"(Duration: {end_time - start_time:.2f}s, CPU: {estimated_cpu_usage:.1f}%)")
                 if self.monitor_gpu:
-                    self.logger.info(f"[{quality.upper()} #{task_id}] GPU usage: {estimated_gpu_usage:.1f}%")
+                    self.logger.info(f"[{quality.upper()} #{task_id}] GPU usage: {estimated_gpu_usage:.1f}%, "
+                                   f"GPU memory: {estimated_gpu_memory_usage:.1f}%")
             else:
                 error_msg = stderr_content if stderr_content else "Unknown error"
                 self.logger.error(f"[{quality.upper()} #{task_id}] Task failed - Return code: {process.returncode}, "
@@ -278,14 +291,14 @@ class ManimQualityStressTester:
                 stderr=stderr_content,
                 command=cmd,
                 video_info=video_info,
-                estimated_cpu_usage=estimated_cpu_usage
+                estimated_cpu_usage=estimated_cpu_usage,
+                estimated_gpu_usage=estimated_gpu_usage,
+                gpu_usage_start=start_gpu_usage,
+                gpu_usage_end=end_gpu_usage,
+                gpu_memory_usage_start=start_gpu_memory_usage,
+                gpu_memory_usage_end=end_gpu_memory_usage,
+                estimated_gpu_memory_usage=estimated_gpu_memory_usage
             )
-            
-            # Add GPU usage if monitored
-            if self.monitor_gpu:
-                render_result.estimated_gpu_usage = estimated_gpu_usage
-                render_result.gpu_usage_start = start_gpu_usage
-                render_result.gpu_usage_end = end_gpu_usage
             
             return render_result
             
@@ -293,8 +306,9 @@ class ManimQualityStressTester:
             end_time = time.time()
             end_resources = self.resource_monitor.get_system_resources()
             end_gpu_usage = 0.0
+            end_gpu_memory_usage = 0.0
             if self.gpu_monitor and self.monitor_gpu:
-                end_gpu_usage = self.gpu_monitor.get_gpu_usage()
+                end_gpu_usage, end_gpu_memory_usage = self.gpu_monitor.get_gpu_usage()
             error_traceback = traceback.format_exc()
             
             with open(task_log_file, 'a', encoding='utf-8') as log_f:
@@ -322,13 +336,14 @@ class ManimQualityStressTester:
                 stdout="",
                 stderr=str(e) + "\n" + error_traceback,
                 command=cmd,
-                estimated_cpu_usage=(start_resources['cpu_percent'] + end_resources['cpu_percent']) / 2
+                estimated_cpu_usage=(start_resources['cpu_percent'] + end_resources['cpu_percent']) / 2,
+                estimated_gpu_usage=(start_gpu_usage + end_gpu_usage) / 2 if self.monitor_gpu else 0.0,
+                gpu_usage_start=start_gpu_usage,
+                gpu_usage_end=end_gpu_usage,
+                gpu_memory_usage_start=start_gpu_memory_usage,
+                gpu_memory_usage_end=end_gpu_memory_usage,
+                estimated_gpu_memory_usage=(start_gpu_memory_usage + end_gpu_memory_usage) / 2 if self.monitor_gpu else 0.0
             )
-            
-            if self.monitor_gpu:
-                render_result.estimated_gpu_usage = (start_gpu_usage + end_gpu_usage) / 2
-                render_result.gpu_usage_start = start_gpu_usage
-                render_result.gpu_usage_end = end_gpu_usage
             
             return render_result
     
@@ -348,8 +363,8 @@ class ManimQualityStressTester:
         
         # Check GPU resources if monitoring
         if self.gpu_monitor and self.monitor_gpu:
-            current_gpu = self.gpu_monitor.get_gpu_usage()
-            if current_gpu > 90:
+            current_gpu, current_gpu_memory = self.gpu_monitor.get_gpu_usage()
+            if current_gpu > 90 or current_gpu_memory > 90:
                 self.logger.warning(self.translator.get('waiting_resources'))
                 return False
         
@@ -358,12 +373,15 @@ class ManimQualityStressTester:
         if not successful_tasks:
             avg_cpu_usage = 20.0
             avg_gpu_usage = 10.0 if self.monitor_gpu else 0.0
+            avg_gpu_memory_usage = 10.0 if self.monitor_gpu else 0.0
         else:
             avg_cpu_usage = statistics.mean([t.estimated_cpu_usage for t in successful_tasks])
-            if self.monitor_gpu and hasattr(successful_tasks[0], 'estimated_gpu_usage'):
+            if self.monitor_gpu:
                 avg_gpu_usage = statistics.mean([t.estimated_gpu_usage for t in successful_tasks])
+                avg_gpu_memory_usage = statistics.mean([t.estimated_gpu_memory_usage for t in successful_tasks])
             else:
                 avg_gpu_usage = 0.0
+                avg_gpu_memory_usage = 0.0
         
         # Check CPU resources
         remaining_cpu = 100 - current_cpu
@@ -373,9 +391,12 @@ class ManimQualityStressTester:
         # Check GPU resources
         gpu_ok = True
         if self.monitor_gpu:
-            remaining_gpu = 100 - self.gpu_monitor.get_gpu_usage()
+            current_gpu, current_gpu_memory = self.gpu_monitor.get_gpu_usage()
+            remaining_gpu = 100 - current_gpu
+            remaining_gpu_memory = 100 - current_gpu_memory
             required_gpu = avg_gpu_usage + 5.0
-            gpu_ok = remaining_gpu >= required_gpu
+            required_gpu_memory = avg_gpu_memory_usage + 5.0
+            gpu_ok = remaining_gpu >= required_gpu and remaining_gpu_memory >= required_gpu_memory
         
         can_start = cpu_ok and gpu_ok
         
@@ -540,8 +561,10 @@ class ManimQualityStressTester:
             
             cpu_usage_history = [r.estimated_cpu_usage for r in successful_results if r.estimated_cpu_usage > 0]
             gpu_usage_history = []
+            gpu_memory_usage_history = []
             if self.monitor_gpu:
-                gpu_usage_history = [r.estimated_gpu_usage for r in successful_results if hasattr(r, 'estimated_gpu_usage') and r.estimated_gpu_usage > 0]
+                gpu_usage_history = [r.estimated_gpu_usage for r in successful_results if r.estimated_gpu_usage > 0]
+                gpu_memory_usage_history = [r.estimated_gpu_memory_usage for r in successful_results if r.estimated_gpu_memory_usage > 0]
             
             result = QualityTestResult(
                 quality=quality,
@@ -571,7 +594,9 @@ class ManimQualityStressTester:
                 individual_results=render_results,
                 cpu_usage_history=cpu_usage_history,
                 gpu_usage_history=gpu_usage_history,
-                use_gpu=self.use_gpu
+                gpu_memory_usage_history=gpu_memory_usage_history,
+                use_gpu=self.use_gpu,
+                gpu_info=self.gpu_info
             )
             
             self.logger.info(self.translator.get('test_completed', quality=quality.upper()))
@@ -623,8 +648,8 @@ class ManimQualityStressTester:
                         resources = self.resource_monitor.get_system_resources()
                         self.logger.info(self.translator.get('countdown_resources', seconds=i, cpu=resources['cpu_percent'], memory=resources['memory_percent']))
                         if self.gpu_monitor and self.monitor_gpu:
-                            gpu_usage = self.gpu_monitor.get_gpu_usage()
-                            self.logger.info(f"GPU usage: {gpu_usage:.1f}%")
+                            gpu_usage, gpu_memory_usage = self.gpu_monitor.get_gpu_usage()
+                            self.logger.info(f"GPU usage: {gpu_usage:.1f}%, GPU memory: {gpu_memory_usage:.1f}%")
                     time.sleep(1)
                 
                 result = self.test_quality_level(quality, max_duration_per_test)
@@ -640,7 +665,7 @@ class ManimQualityStressTester:
         return results
     
     def generate_report(self, results: Dict[str, QualityTestResult]) -> str:
-        """Generate detailed test report"""
+        """Generate detailed test report with GPU statistics"""
         from ..utils.system_info import get_system_info
         
         report_lines = []
@@ -661,9 +686,8 @@ class ManimQualityStressTester:
         report_lines.append(self.translator.get('cpu_cores', physical=system_info['cpu_physical'], logical=system_info['cpu_logical']))
         report_lines.append(self.translator.get('total_memory', memory=system_info['total_memory_gb']))
         report_lines.append(self.translator.get('available_disk', disk=system_info['available_disk_gb']))
-        if self.monitor_gpu and self.gpu_monitor:
-            gpu_info = self.gpu_monitor.get_gpu_info()
-            report_lines.append(f"  GPU: {gpu_info}")
+        if self.use_gpu and self.gpu_info:
+            report_lines.append(f"  GPU: {self.gpu_info}")
         report_lines.append("")
         
         all_qualities = ['low', 'medium', 'high', '2k', '4k']
@@ -721,10 +745,19 @@ class ManimQualityStressTester:
                 report_lines.append(self.translator.get('resource_usage_stats'))
                 report_lines.append(self.translator.get('cpu_usage_stats', avg=statistics.mean(cpu_usage), peak=max(cpu_usage)))
                 report_lines.append(self.translator.get('memory_usage_stats', avg=statistics.mean(memory_usage), peak=max(memory_usage)))
+                
+                # GPU usage statistics
                 if result.use_gpu and result.gpu_usage_history:
-                    avg_gpu = statistics.mean(result.gpu_usage_history)
-                    peak_gpu = max(result.gpu_usage_history)
+                    gpu_usage = result.gpu_usage_history
+                    gpu_memory_usage = result.gpu_memory_usage_history
+                    
+                    avg_gpu = statistics.mean(gpu_usage) if gpu_usage else 0.0
+                    peak_gpu = max(gpu_usage) if gpu_usage else 0.0
+                    avg_gpu_memory = statistics.mean(gpu_memory_usage) if gpu_memory_usage else 0.0
+                    peak_gpu_memory = max(gpu_memory_usage) if gpu_memory_usage else 0.0
+                    
                     report_lines.append(f"  GPU usage - Average: {avg_gpu:.1f}%, Peak: {peak_gpu:.1f}%")
+                    report_lines.append(f"  GPU memory usage - Average: {avg_gpu_memory:.1f}%, Peak: {peak_gpu_memory:.1f}%")
                 report_lines.append("")
             
             if result.cpu_usage_history:
@@ -732,7 +765,9 @@ class ManimQualityStressTester:
                 report_lines.append(self.translator.get('avg_cpu_per_task', usage=avg_cpu_per_task))
                 if result.use_gpu and result.gpu_usage_history:
                     avg_gpu_per_task = statistics.mean(result.gpu_usage_history)
+                    avg_gpu_memory_per_task = statistics.mean(result.gpu_memory_usage_history)
                     report_lines.append(f"Average GPU usage per task: {avg_gpu_per_task:.1f}%")
+                    report_lines.append(f"Average GPU memory usage per task: {avg_gpu_memory_per_task:.1f}%")
                 report_lines.append("")
             
             report_lines.append(self.translator.get('detailed_logs_saved', path=self.log_output_dir / quality))
