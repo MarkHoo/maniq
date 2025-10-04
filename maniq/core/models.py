@@ -44,6 +44,9 @@ class RenderResult:
     estimated_gpu_usage: float = 0.0
     gpu_usage_start: float = 0.0
     gpu_usage_end: float = 0.0
+    gpu_memory_usage_start: float = 0.0
+    gpu_memory_usage_end: float = 0.0
+    estimated_gpu_memory_usage: float = 0.0
 
 @dataclass
 class QualityTestResult:
@@ -76,5 +79,7 @@ class QualityTestResult:
     cpu_usage_history: List[float]
     # GPU fields
     gpu_usage_history: List[float] = None
+    gpu_memory_usage_history: List[float] = None
     use_gpu: bool = False
+    gpu_info: str = ""
     

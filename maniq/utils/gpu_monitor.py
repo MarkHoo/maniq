@@ -5,7 +5,7 @@ GPU monitoring utilities for Maniq
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -34,18 +34,25 @@ class GPUMonitor:
             logger.warning(f"Failed to initialize NVML: {e}")
             self.nvml_available = False
     
-    def get_gpu_usage(self) -> float:
-        """Get current GPU usage percentage"""
+    def get_gpu_usage(self) -> Tuple[float, float]:
+        """Get current GPU usage percentage and memory usage percentage"""
         if not self.nvml_available or self.handle is None:
-            return 0.0
+            return 0.0, 0.0
         
         try:
             import pynvml
+            # Get GPU utilization
             util = pynvml.nvmlDeviceGetUtilizationRates(self.handle)
-            return float(util.gpu)
+            gpu_usage = float(util.gpu)
+            
+            # Get GPU memory utilization
+            memory_info = pynvml.nvmlDeviceGetMemoryInfo(self.handle)
+            memory_usage = (memory_info.used / memory_info.total) * 100.0
+            
+            return gpu_usage, memory_usage
         except Exception as e:
             logger.warning(f"Failed to get GPU usage: {e}")
-            return 0.0
+            return 0.0, 0.0
     
     def get_gpu_info(self) -> str:
         """Get GPU information string"""

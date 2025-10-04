@@ -97,6 +97,11 @@ TRANSLATIONS = {
         'high_name': "HIGH",
         '2k_name': "2K",
         '4k_name': "4K",
+
+        'gpu_usage_stats': "  GPU usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'gpu_memory_usage_stats': "  GPU memory usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'avg_gpu_per_task': "Average GPU usage per task: {usage:.1f}%",
+        'avg_gpu_memory_per_task': "Average GPU memory usage per task: {usage:.1f}%",
     },
     'zh': {
         # Simplified Chinese
@@ -187,6 +192,11 @@ TRANSLATIONS = {
         'high_name': "高质量",
         '2k_name': "2K",
         '4k_name': "4K",
+
+        'gpu_usage_stats': "  GPU usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'gpu_memory_usage_stats': "  GPU memory usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'avg_gpu_per_task': "Average GPU usage per task: {usage:.1f}%",
+        'avg_gpu_memory_per_task': "Average GPU memory usage per task: {usage:.1f}%",
     },
     'zh_tw': {
         # Traditional Chinese
@@ -277,6 +287,11 @@ TRANSLATIONS = {
         'high_name': "高品質",
         '2k_name': "2K",
         '4k_name': "4K",
+
+        'gpu_usage_stats': "  GPU usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'gpu_memory_usage_stats': "  GPU memory usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'avg_gpu_per_task': "Average GPU usage per task: {usage:.1f}%",
+        'avg_gpu_memory_per_task': "Average GPU memory usage per task: {usage:.1f}%",
     },
     'ko': {
         # Korean
@@ -367,6 +382,11 @@ TRANSLATIONS = {
         'high_name': "고품질",
         '2k_name': "2K",
         '4k_name': "4K",
+
+        'gpu_usage_stats': "  GPU usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'gpu_memory_usage_stats': "  GPU memory usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'avg_gpu_per_task': "Average GPU usage per task: {usage:.1f}%",
+        'avg_gpu_memory_per_task': "Average GPU memory usage per task: {usage:.1f}%",
     },
     'ja': {
         # Japanese
@@ -457,6 +477,11 @@ TRANSLATIONS = {
         'high_name': "高品質",
         '2k_name': "2K",
         '4k_name': "4K",
+
+        'gpu_usage_stats': "  GPU usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'gpu_memory_usage_stats': "  GPU memory usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'avg_gpu_per_task': "Average GPU usage per task: {usage:.1f}%",
+        'avg_gpu_memory_per_task': "Average GPU memory usage per task: {usage:.1f}%",
     },
     'de': {
         # German
@@ -547,6 +572,11 @@ TRANSLATIONS = {
         'high_name': "HOCH",
         '2k_name': "2K",
         '4k_name': "4K",
+
+        'gpu_usage_stats': "  GPU usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'gpu_memory_usage_stats': "  GPU memory usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'avg_gpu_per_task': "Average GPU usage per task: {usage:.1f}%",
+        'avg_gpu_memory_per_task': "Average GPU memory usage per task: {usage:.1f}%",
     },
     'fr': {
         # French
@@ -637,6 +667,11 @@ TRANSLATIONS = {
         'high_name': "HAUTE",
         '2k_name': "2K",
         '4k_name': "4K",
+
+        'gpu_usage_stats': "  GPU usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'gpu_memory_usage_stats': "  GPU memory usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'avg_gpu_per_task': "Average GPU usage per task: {usage:.1f}%",
+        'avg_gpu_memory_per_task': "Average GPU memory usage per task: {usage:.1f}%",
     },
     'es': {
         # Spanish
@@ -727,6 +762,11 @@ TRANSLATIONS = {
         'high_name': "ALTA",
         '2k_name': "2K",
         '4k_name': "4K",
+
+        'gpu_usage_stats': "  GPU usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'gpu_memory_usage_stats': "  GPU memory usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'avg_gpu_per_task': "Average GPU usage per task: {usage:.1f}%",
+        'avg_gpu_memory_per_task': "Average GPU memory usage per task: {usage:.1f}%",
     },
     'ru': {
         # Russian
@@ -817,5 +857,10 @@ TRANSLATIONS = {
         'high_name': "ВЫСОКОЕ",
         '2k_name': "2K",
         '4k_name': "4K",
+
+        'gpu_usage_stats': "  GPU usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'gpu_memory_usage_stats': "  GPU memory usage - Average: {avg:.1f}%, Peak: {peak:.1f}%",
+        'avg_gpu_per_task': "Average GPU usage per task: {usage:.1f}%",
+        'avg_gpu_memory_per_task': "Average GPU memory usage per task: {usage:.1f}%",
     }
 }
